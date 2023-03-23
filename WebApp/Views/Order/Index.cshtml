@@ -1,0 +1,192 @@
+﻿@using WebApp.Extension.Pagging;
+@using WebApp.Models.Response.Shoping;
+@model ViewPagging<ViewOrderResponse>
+
+@{
+    ViewData["Title"] = "View";
+}
+
+@section Styles {
+    <style>
+        .form_search {
+            display: flex;
+        }
+
+        .form_search-title {
+            display: flex;
+            align-items: center;
+            margin-right: 8px;
+        }
+
+        .form_search-input {
+            margin-right: 8px;
+            max-width: 40%;
+        }
+
+            .form_search-input .input-group-text {
+                border-top-left-radius: 20px;
+                border-bottom-left-radius: 20px;
+            }
+
+            .form_search-input input {
+                border-left: 0;
+                border-top-right-radius: 20px;
+                border-bottom-right-radius: 20px;
+            }
+
+        .table_nav {
+            display: flex;
+        }
+
+        .table_nav-item {
+            border: 1px solid #ddd;
+            padding: 0 8px;
+            margin-right: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .table_nav-item_active {
+            border: none;
+            font-weight: bold;
+            color: coral;
+        }
+
+        .form_action {
+            margin-top: 20px;
+        }
+
+            .form_action a {
+                float: right;
+            }
+    </style>
+}
+
+<div class="form_search">
+    <div class="form_search-title">Enter category to search</div>
+    <div class="input-group form_search-input">
+        <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+        <input id="txtSearch" type="text" class="form-control">
+    </div>
+    <div class="form_search-button"><button id="btnSearch" class="form-control">Search</button></div>
+</div>
+
+<div id="frameViewOrder"></div>
+
+<div class="form_action">
+    <a asp-action="Create">Create Order</a>
+</div>
+
+@section PrepareData {
+    <script type="text/javascript">
+        window.pageorder = window.pageorder || {}
+        window.pageorder.search = {
+            SearchColumn: "@(Model.SearchColumn ?? "CategoryName")",
+            SearchText: "@(Model.SearchText ?? "")",
+            SortColumn: "@(Model.SortColumn ?? "ProductName")",
+            SortDir: "@(Model.SortDir ?? "ASC")",
+            Skip: @(Model.Skip),
+            Take: @(Model.Take),
+            Total: @(Model.Total),
+        }
+
+        window.vieworder = window.vieworder || {}
+        window.vieworder.pageindex = 1;
+    </script>
+}
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            reloadViewOrder();
+
+            $("#btnSearch").click(function () {
+                window.pageorder.search.SearchText = $('#txtSearch').val();
+                reloadViewOrder();
+            });
+        });
+
+        function reloadViewOrder() {
+            return new Promise((resolve, reject) => {
+                $('#frameViewOrder').load("/Order/GetPartialViewOrder", pageorder.search, function () {
+                    loadViewOrderEvents();
+                    resolve();
+                });
+            })
+        }
+    </script>
+
+
+    <script type="text/javascript">
+        function loadViewOrderEvents() {
+            let search = window.pageorder.search;
+
+            $(".table.view_order thead th").on("click", function () {
+                let oldColumn = search.SortColumn;
+                let oldSortDir = search.SortDir;
+                let oldSortIcon = $(this).parent().find("th i[data-sort-icon='" + oldColumn + "']");
+                let newSortIcon = $(this).find("i[data-sort-icon]");
+                let newColumn = $(newSortIcon).data("sort-icon");
+                let nextSortDir = getNextSortDir(oldColumn, newColumn, oldSortDir);
+
+                search.SortColumn = newColumn;
+                search.SortDir = nextSortDir;
+
+                reloadViewOrder().then(() => {
+                    operateSortIcon(oldColumn, newColumn);
+                });
+            })
+
+            let pageIndex = ~~(search.Skip / search.Take);
+            let tableNavs = $(".table_nav .table_nav-item");
+            for (let navItem of tableNavs) {
+                let index = $(navItem).data("index");
+                if (index === "first") setNavItem(navItem, 0, "First")
+                else if (index === "previous") setNavItem(navItem, pageIndex - 1, "Previous")
+                else if (index === 1) setNavItem(navItem, pageIndex - 2)
+                else if (index === 2) setNavItem(navItem, pageIndex - 1)
+                else if (index === 3) setNavItem(navItem, pageIndex)
+                else if (index === 4) setNavItem(navItem, pageIndex + 1)
+                else if (index === 5) setNavItem(navItem, pageIndex + 2)
+                else if (index === "next") setNavItem(navItem, pageIndex + 1, "Next")
+                else if (index === "last") setNavItem(navItem, ~~(search.Total / search.Take), "Last")
+
+                $(navItem).on("click", function () {
+                    search.Skip = +$(navItem).data("value") * search.Take;
+
+                    if (search.Skip < 0) search.Skip = 0;
+                    reloadViewOrder();
+                })
+            }
+        }
+
+        function setNavItem(navItem, navPageIndex, navName) {
+            $(navItem).css("display", navPageIndex < 0 ? "none" : "");
+            $(navItem).data("value", navPageIndex);
+            $(navItem).text(navName ? navName : navPageIndex);
+        }
+
+        function getNextSortDir(oldColumn, newColumn, sortDir) {
+            if (oldColumn === newColumn && sortDir === "ASC") return "DESC";
+            return "ASC";
+        }
+
+        function operateSortIcon(oldColumn, newColumn, oldSortIcon) {
+            let oldSortIcon2 = $(".table.view_order thead").find("th i[data-sort-icon= '" + oldColumn + "']");
+            let newSortIcon2 = $(".table.view_order thead").find("th i[data-sort-icon= '" + newColumn + "']");
+
+            if (oldColumn === newColumn) {
+                $(oldSortIcon2).css("display", "");
+                oldSortIcon2[0].classList.value = commonname.sortclass[window.pageorder.search.SortDir];
+            } else {
+                $(oldSortIcon2).css("display", "none");
+                $(newSortIcon2).css("display", "");
+                newSortIcon2[0].classList.value = commonname.sortclass[window.pageorder.search.SortDir];
+            }
+        }
+
+        function setPageIndex(number) {
+            window.vieworder.pageindex = number;
+        }
+    </script>
+}

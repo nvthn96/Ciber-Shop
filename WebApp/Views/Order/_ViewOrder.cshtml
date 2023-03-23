@@ -1,0 +1,70 @@
+﻿@using WebApp.Extension.Pagging;
+@using WebApp.Models.Response.Shoping;
+@model ViewPagging<ViewOrderResponse>
+
+<table class="table view_order">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Data.FirstOrDefault().ProductName)
+                <i data-sort-icon="ProductName"></i>
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Data.FirstOrDefault().CategoryName)
+                <i data-sort-icon="CategoryName"></i>
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Data.FirstOrDefault().CustomerName)
+                <i data-sort-icon="CustomerName"></i>
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Data.FirstOrDefault().OrderDate)
+                <i data-sort-icon="OrderDate"></i>
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Data.FirstOrDefault().Amount)
+                <i data-sort-icon="Amount"></i>
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Data)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ProductName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CategoryName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CustomerName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.OrderDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Amount)
+                </td>
+                @*<td>
+                    <a asp-action="Edit" asp-route-id="@item.OrderId">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.OrderId">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.OrderId">Delete</a>
+                </td>*@
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="table_nav">
+    <div class="table_nav-item" data-index="first">First</div>
+    <div class="table_nav-item" data-index="previous">Previous</div>
+    <div class="table_nav-item" data-index="1">1</div>
+    <div class="table_nav-item" data-index="2">2</div>
+    <div class="table_nav-item table_nav-item_active" data-index="3">3</div>
+    <div class="table_nav-item" data-index="4">4</div>
+    <div class="table_nav-item" data-index="5">5</div>
+    <div class="table_nav-item" data-index="next">Next</div>
+    <div class="table_nav-item" data-index="last">Last</div>
+</div>
